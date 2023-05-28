@@ -32,3 +32,9 @@ FEATURES
 
 sdk: '>=2.19.6 <3.0.0'
 version: 1.0.0+1
+
+
+
+APK FILE 
+-------------------------
+https://drive.google.com/file/d/1Ghx1BzjyxbhnypjkpOI___mzv0lrnjw_/view?usp=share_link
