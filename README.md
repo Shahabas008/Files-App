@@ -16,7 +16,8 @@ PACKAGES
 * image_cropper: ^4.0.1
 * image_picker: ^0.8.7+5 
 
-
+FEATURES
+-------------------------
 
 * I have added a firebase push notification when the user adds new folder to the application.
 * Added the feature to add new folder to the application.
