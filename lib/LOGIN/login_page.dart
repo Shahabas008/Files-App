@@ -1,9 +1,9 @@
-import 'package:file_app/ui/homepage.dart';
-import 'package:file_app/ui/signup.dart';
+import 'package:file_app/HOME/homepage.dart';
+import 'package:file_app/SIGNUP/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../controller/login_controller.dart';
+import 'login_controller.dart';
 
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});

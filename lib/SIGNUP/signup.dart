@@ -1,4 +1,4 @@
-import 'package:file_app/controller/signup_controller.dart';
+import 'package:file_app/SIGNUP/signup_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

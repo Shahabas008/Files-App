@@ -1,4 +1,4 @@
-import 'package:file_app/ui/homepage.dart';
+import 'package:file_app/HOME/homepage.dart';
 import 'package:file_app/utils/snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

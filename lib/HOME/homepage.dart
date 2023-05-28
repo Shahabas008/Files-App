@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_app/controller/homepage_controller.dart';
-import 'package:file_app/controller/signup_controller.dart';
+import 'package:file_app/HOME/homepage_controller.dart';
+import 'package:file_app/HOME/homepage_folder.dart';
+import 'package:file_app/SIGNUP/signup_controller.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -250,53 +252,71 @@ class _HomePageState extends State<HomePage> {
                   thickness: 0.4,
                   color: Colors.black,
                 ),
-                SingleChildScrollView(
-                  child: Obx(
-                    () {
-                      return homeController.cardList.isEmpty
-                          ? Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Column(
-                                children: [
-                                  Image.asset('assets/image/noimage.png'),
-                                  const SizedBox(
-                                    height: 10,
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("Users")
+                      .doc(currentuser!.email)
+                      .collection("Folders")
+                      .snapshots(),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data!.docs.isEmpty ||
+                          snapshot.data == null) {
+                        return SingleChildScrollView(
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Column(
+                              children: [
+                                Image.asset('assets/image/noimage.png'),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                const Text(
+                                  "YOU HAVEN'T ADDED ANY FOLDERS",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  const Text(
-                                    "YOU HAVEN'T ADDED ANY FOLDERS",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                ],
-                              ))
-                          : SizedBox(
-                              height: height,
-                              child: ListView.builder(
-                                itemCount: homeController.cardList.length,
-                                itemBuilder: (context, index) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      homeController.cardList[index].navigateto;
-                                    },
-                                    child: SizedBox(
-                                      width: width,
-                                      height: height * 0.08,
-                                      child: Card(
-                                        color: Colors.teal[100],
-                                        child: Align(
-                                            alignment: Alignment.center,
-                                            child: Text(homeController
-                                                .cardList[index].title)),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      } else {
+                        final snap = snapshot.data!.docs;
+                        return SizedBox(
+                          height: height,
+                          child: ListView.builder(
+                            itemCount: snap.length,
+                            itemBuilder: (context, index) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Get.to(() => HomePagefolder(), arguments: {
+                                    "Folder Name": snap[index]["Folder Name"]
+                                  });
+                                },
+                                child: SizedBox(
+                                  width: width,
+                                  height: height * 0.08,
+                                  child: Card(
+                                    color: Colors.teal[100],
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        snap[index]["Folder Name"],
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
-                            );
-                    },
-                  ),
-                )
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }
+                    } else {
+                      return Container();
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -324,19 +344,9 @@ class _HomePageState extends State<HomePage> {
                   actions: [
                     ElevatedButton(
                       onPressed: () {
-                        homeController.createFolder(
-                          title: titleController.text.trim(),
-                          context: context,
-                          navigateto: () {
-                            // navigating to the page of the folder
-                            homeController.createFolder(
-                              title: titleController.text.trim(),
-                              context: context,
-                              navigateto: () {
-                                //navigate each folder
-                              },
-                            );
-                          },
+                        
+                        homeController.createdFolder(
+                          titleController.text.trim(),
                         );
                         Navigator.pop(context);
                       },

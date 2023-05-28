@@ -1,6 +1,6 @@
 import 'dart:developer';
 
-import 'package:file_app/ui/auth_page.dart';
+import 'package:file_app/services/auth_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +13,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  final fmcToken = await FirebaseMessaging.instance.getToken();
-  log(fmcToken.toString());
   runApp(const MyApp());
 }
 
