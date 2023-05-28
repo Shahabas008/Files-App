@@ -1,101 +1,45 @@
+import 'dart:developer';
 import 'dart:io';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path/path.dart' as Path;
 import 'package:dotted_border/dotted_border.dart';
+import 'package:file_app/HOMEFOLDER/homepage_folder_controller.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-          highlightColor: const Color(0xFFD0996F),
-          canvasColor: const Color(0xFFFDF5EC),
-          textTheme: TextTheme(
-            headlineSmall: ThemeData.light()
-                .textTheme
-                .headlineSmall!
-                .copyWith(color: const Color(0xFFBC764A)),
-          ),
-          iconTheme: IconThemeData(
-            color: Colors.grey[600],
-          ),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFFBC764A),
-            centerTitle: false,
-            foregroundColor: Colors.white,
-            actionsIconTheme: IconThemeData(color: Colors.white),
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateColor.resolveWith(
-                  (states) => const Color(0xFFBC764A)),
-            ),
-          ),
-          outlinedButtonTheme: OutlinedButtonThemeData(
-            style: ButtonStyle(
-              foregroundColor: MaterialStateColor.resolveWith(
-                (states) => const Color(0xFFBC764A),
-              ),
-              side: MaterialStateBorderSide.resolveWith(
-                  (states) => const BorderSide(color: Color(0xFFBC764A))),
-            ),
-          ),
-          colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue)
-              .copyWith(background: const Color(0xFFFDF5EC))),
-      home: const HomePage(title: 'Image Cropper Demo'),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  final String title;
-
-  const HomePage({
-    Key? key,
-    required this.title,
-  }) : super(key: key);
+class HomePagefolder extends StatefulWidget {
+  const HomePagefolder({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePagefolder> createState() => _HomePagefolderState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePagefolderState extends State<HomePagefolder> {
+  final folderName = Get.arguments["Folder Name"];
+  final homePageFolderController = Get.put(HomePageFolderController());
+  User? currentuser = FirebaseAuth.instance.currentUser;
   XFile? _pickedFile;
   CroppedFile? _croppedFile;
+  @override
+  void initState() {
+    super.initState();
+    homePageFolderController.folderName = folderName;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: !kIsWeb ? AppBar(title: Text(widget.title)) : null,
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (kIsWeb)
-            Padding(
-              padding: const EdgeInsets.all(kIsWeb ? 24.0 : 16.0),
-              child: Text(
-                widget.title,
-                style: Theme.of(context)
-                    .textTheme
-                    .displayMedium!
-                    .copyWith(color: Theme.of(context).highlightColor),
-              ),
-            ),
-          Expanded(child: _body()),
-        ],
-      ),
+    return SafeArea(
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text(folderName),
+          ),
+          body: _body()
+          ),
     );
   }
 
@@ -114,12 +58,11 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: kIsWeb ? 24.0 : 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Card(
               elevation: 4.0,
               child: Padding(
-                padding: const EdgeInsets.all(kIsWeb ? 24.0 : 16.0),
+                padding: const EdgeInsets.all(8),
                 child: _image(),
               ),
             ),
@@ -161,14 +104,6 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        FloatingActionButton(
-          onPressed: () {
-            _clear();
-          },
-          backgroundColor: Colors.redAccent,
-          tooltip: 'Delete',
-          child: const Icon(Icons.delete),
-        ),
         if (_croppedFile == null)
           Padding(
             padding: const EdgeInsets.only(left: 32.0),
@@ -209,32 +144,61 @@ class _HomePageState extends State<HomePage> {
                     dashPattern: const [8, 4],
                     color: Theme.of(context).highlightColor.withOpacity(0.4),
                     child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image,
-                            color: Theme.of(context).highlightColor,
-                            size: 80.0,
-                          ),
-                          const SizedBox(height: 24.0),
-                          Text(
-                            'Upload an image to start',
-                            style: kIsWeb
-                                ? Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall!
-                                    .copyWith(
-                                        color: Theme.of(context).highlightColor)
-                                : Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .copyWith(
-                                        color:
-                                            Theme.of(context).highlightColor),
-                          )
-                        ],
+                      child:
+                          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection("Users")
+                            .doc(currentuser!.email)
+                            .collection("Folders")
+                            .doc(folderName)
+                            .snapshots(),
+                        builder: (context,
+                            AsyncSnapshot<
+                                    DocumentSnapshot<Map<String, dynamic>>>
+                                snapshot) {
+                          if (snapshot.hasData) {
+                            final snap = snapshot.data!;
+                            if (snap.exists &&
+                                snap.data()!.containsKey("Folder File URL")) {
+                              final folderFileUrl =
+                                  snap.data()!["Folder File URL"];
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  folderFileUrl != null
+                                      ? Image.network(folderFileUrl)
+                                      : Icon(
+                                          Icons.image,
+                                          color:
+                                              Theme.of(context).highlightColor,
+                                          size: 80.0,
+                                        ),
+                                  const SizedBox(height: 24.0),
+                                ],
+                              );
+                            } else {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.image,
+                                    color: Theme.of(context).highlightColor,
+                                    size: 80.0,
+                                  ),
+                                  const SizedBox(height: 24.0),
+                                  const Text(
+                                    'Upload an image to start',
+                                    style: TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              );
+                            }
+                          } else {
+                            return const CircularProgressIndicator(); // Or any loading indicator
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -299,16 +263,23 @@ class _HomePageState extends State<HomePage> {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final photo = File(pickedFile.path);
       setState(() {
         _pickedFile = pickedFile;
       });
-    }
-  }
+      final fileName = Path.basename(photo.path);
+      final destination = 'Add Item/$fileName';
 
-  void _clear() {
-    setState(() {
-      _pickedFile = null;
-      _croppedFile = null;
-    });
+      try {
+        final uploadimage =
+            FirebaseStorage.instance.ref(destination).child('add item/');
+        await uploadimage.putFile(photo);
+        final downloadUrl = await uploadimage.getDownloadURL();
+        homePageFolderController.uploadFolderDownloadUrl(
+            downloadUrl: downloadUrl);
+      } on FirebaseException catch (e) {
+        log("$e");
+      }
+    }
   }
 }

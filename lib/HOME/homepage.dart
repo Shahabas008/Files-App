@@ -1,10 +1,15 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_app/HOME/homepage_controller.dart';
-import 'package:file_app/HOME/homepage_folder.dart';
+import 'package:file_app/HOMEFOLDER/homepage_folder.dart';
 import 'package:file_app/SIGNUP/signup_controller.dart';
+import 'package:file_app/main.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,6 +24,53 @@ class _HomePageState extends State<HomePage> {
   final signUpController = Get.put(SignUpController());
   TextEditingController titleController = TextEditingController();
   User? currentuser = FirebaseAuth.instance.currentUser;
+  @override
+  void initState() {
+    super.initState();
+    FirebaseMessaging.onMessage.listen(
+      (RemoteMessage message) {
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification!.android;
+        if (notification != null && android != null) {
+          flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(channel.id, channel.name,
+                  channelDescription: channel.description,
+                  color: Colors.teal[100],
+                  playSound: true,
+                  icon: "@mipmap/ic_launcher"),
+            ),
+          );
+        }
+      },
+    );
+    FirebaseMessaging.onMessageOpenedApp.listen(
+      (RemoteMessage message) {
+        log("A new onMessageOpened event was published!");
+        RemoteNotification? notification = message.notification;
+        AndroidNotification? android = message.notification!.android;
+        if (notification != null && android != null) {
+          showDialog(
+            context: context,
+            builder: (_) {
+              return AlertDialog(
+                title: Text(notification.title!),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [Text(notification.body!)],
+                  ),
+                ),
+              );
+            },
+          );
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +185,7 @@ class _HomePageState extends State<HomePage> {
                                             null
                                         ? const Align(
                                             alignment: Alignment.center,
-                                            child: Text("Container for adhaar"))
+                                            child: Text("Adhaar"))
                                         : Image.network(snapshot.data!
                                                 .data()?["Adhaar File URL"] ??
                                             ""));
@@ -175,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                                         null
                                     ? const Align(
                                         alignment: Alignment.center,
-                                        child: Text("Container for PAN"))
+                                        child: Text("PAN"))
                                     : Image.network(snapshot.data!
                                             .data()?["PAN File URL"] ??
                                         ""));
@@ -218,7 +270,7 @@ class _HomePageState extends State<HomePage> {
                                         null
                                     ? const Align(
                                         alignment: Alignment.center,
-                                        child: Text("Container for license"))
+                                        child: Text("License"))
                                     : Image.network(snapshot.data!
                                             .data()?["License File URL"] ??
                                         ""));
@@ -252,6 +304,7 @@ class _HomePageState extends State<HomePage> {
                   thickness: 0.4,
                   color: Colors.black,
                 ),
+
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection("Users")
@@ -290,9 +343,11 @@ class _HomePageState extends State<HomePage> {
                             itemBuilder: (context, index) {
                               return GestureDetector(
                                 onTap: () {
-                                  Get.to(() => HomePagefolder(), arguments: {
-                                    "Folder Name": snap[index]["Folder Name"]
-                                  });
+                                  Get.to(() => const HomePagefolder(),
+                                      arguments: {
+                                        "Folder Name": snap[index]
+                                            ["Folder Name"]
+                                      });
                                 },
                                 child: SizedBox(
                                   width: width,
@@ -344,11 +399,24 @@ class _HomePageState extends State<HomePage> {
                   actions: [
                     ElevatedButton(
                       onPressed: () {
-                        
                         homeController.createdFolder(
                           titleController.text.trim(),
                         );
                         Navigator.pop(context);
+                        flutterLocalNotificationsPlugin.show(
+                          0,
+                          "Uploaded",
+                          "You have uploaded a file to the firebase",
+                          NotificationDetails(
+                            android: AndroidNotificationDetails(
+                                channel.id, channel.name,
+                                channelDescription: channel.description,
+                                importance: Importance.high,
+                                color: Colors.teal[100],
+                                playSound: true,
+                                icon: "@mipmap/ic_launcher"),
+                          ),
+                        );
                       },
                       child: const Text("Create"),
                     ),

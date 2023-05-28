@@ -1,13 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_app/HOME/card_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as Path;
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class HomePagecontroller extends GetxController {
@@ -30,7 +27,7 @@ class HomePagecontroller extends GetxController {
     if (result != null && result.files.isNotEmpty) {
       file = File(result.files.single.path!);
       final fileName = Path.basename(file!.path);
-      final destination = 'Files/$fileName';
+      final destination = 'adhaar/$fileName';
       uploadAdhaarFile(destination: destination);
     }
   }
@@ -39,7 +36,7 @@ class HomePagecontroller extends GetxController {
     try {
       final uploadTask = FirebaseStorage.instance
           .ref(destination)
-          .child('Files/')
+          .child('adhaar/')
           .putFile(file!);
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -68,7 +65,7 @@ class HomePagecontroller extends GetxController {
     if (result != null && result.files.isNotEmpty) {
       file = File(result.files.single.path!);
       final fileName = Path.basename(file!.path);
-      final destination = 'Files/$fileName';
+      final destination = 'PAN/$fileName';
       uploadPanFile(destination: destination);
     }
   }
@@ -77,7 +74,7 @@ class HomePagecontroller extends GetxController {
     try {
       final uploadTask = FirebaseStorage.instance
           .ref(destination)
-          .child('Files/')
+          .child('PAN/')
           .putFile(file!);
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -106,7 +103,7 @@ class HomePagecontroller extends GetxController {
     if (result != null && result.files.isNotEmpty) {
       file = File(result.files.single.path!);
       final fileName = Path.basename(file!.path);
-      final destination = 'Files/$fileName';
+      final destination = 'License/$fileName';
       uploadLicenseFile(destination: destination);
     }
   }
@@ -115,7 +112,7 @@ class HomePagecontroller extends GetxController {
     try {
       final uploadTask = FirebaseStorage.instance
           .ref(destination)
-          .child('Files/')
+          .child('License/')
           .putFile(file!);
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -147,42 +144,5 @@ class HomePagecontroller extends GetxController {
         "Folder Name": folderName,
       },
     );
-  }
-
-  // uploading the files to the firestore from the desired folders
-  pickFolderFile() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(type: FileType.any);
-    if (result != null && result.files.isNotEmpty) {
-      file = File(result.files.single.path!);
-      final fileName = Path.basename(file!.path);
-      final destination = 'Files/$fileName';
-      uploadFolderFile(destination: destination);
-    }
-  }
-
-  uploadFolderFile({String? destination}) async {
-    try {
-      final uploadTask = FirebaseStorage.instance
-          .ref(destination)
-          .child('Files/')
-          .putFile(file!);
-      final snapshot = await uploadTask;
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      uploadFolderDownloadUrl(downloadUrl: downloadUrl);
-      log('File Folder uploaded: $downloadUrl', name: downloadUrl);
-    } on FirebaseException catch (e) {
-      log('$e', name: 'Error while uploading the files');
-    }
-  }
-
-  uploadFolderDownloadUrl({String? downloadUrl, String? folderNames}) {
-    log(downloadUrl!);
-    FirebaseFirestore.instance
-        .collection("Users")
-        .doc(curentuser!.email)
-        .collection("Folders")
-        .doc(folderNames)
-        .set({'Folder File URL': downloadUrl}, SetOptions(merge: true));
   }
 }

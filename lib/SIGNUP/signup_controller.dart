@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:file_app/HOME/homepage.dart';
 import 'package:file_app/LOGIN/login_page.dart';
 import 'package:file_app/utils/snackbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,23 +10,12 @@ class SignUpController extends GetxController {
   final FirebaseAuth auth = FirebaseAuth.instance;
   //user sign in
   void signUp({String? email, String? password, BuildContext? context}) async {
-    showDialog(
-      context: context!,
-      builder: (context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
     try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email!,
         password: password!,
       );
-      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
       if (e.code == 'weak-password') {
         Utils.snackbar(
             title: 'weak-password',
@@ -40,6 +28,7 @@ class SignUpController extends GetxController {
     } catch (e) {
       log("$e");
     }
+    Get.off(() => LoginPage());
   }
 
   //user sign out
