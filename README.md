@@ -21,7 +21,7 @@ FEATURES
 
 * I have added a firebase push notification when the user adds new folder to the application.
 * Added the feature to add new folder to the application.
-* I have added a important section to add the Adhaar, PAN, and License.
+* I have added an important section to add the Adhaar, PAN, and License.
 * Files can added to the specific folders.
 * I didn't got the time to add the search feature on the application.
 * Application has the feature of dark mode.
